@@ -11,8 +11,6 @@ import His_GoogleCalander_QuickStart as GooCal
 # General Constants
 chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'  # path to chrome browser
 
-i = 0
-
 
 def main():
     def Create_Tex_Ent(texts):
@@ -22,48 +20,70 @@ def main():
         :param texts: texts is an array that has all the names of entries you want to create
         :return: 2 dictionaries 1 of labels and 1 of entries
         """
-        funTexs = {}
         funEnts = {}
+        funString = {}
         if len(texts[0]) <= 1:
-            funTexs[texts] = tk.Label(root, text=texts, width=25, height=1, font=FNT, relief="groove", compound=tk.TOP)
-
-            funTexs[texts].pack(pady=GENERALPADDING)
+            tk.Label(root, text=texts, width=25, height=1, font=FNT, relief="groove", compound=tk.TOP).pack(pady=GENERALPADDING)
 
             funEnts[texts] = tk.Entry(root, font="Arial")
             funEnts[texts].pack(pady=GENERALPADDING)
 
         else:
             for t in texts:
-                funTexs[t] = tk.Label(root, text=t, width=25, height=1, font=FNT, relief="groove", compound=tk.TOP)
+                tk.Label(root, text=t, width=25, height=1, font=FNT, relief="groove", compound=tk.TOP).pack(pady=GENERALPADDING)
 
-                funTexs[t].pack(pady=GENERALPADDING)
+                funString[t] = tk.StringVar()
 
-                funEnts[t] = tk.Entry(root, font="Arial")
+                funEnts[t] = tk.Entry(root, textvariable=funString[t], font="Arial")
                 funEnts[t].pack(pady=GENERALPADDING)
 
-        return funTexs, funEnts
+        return funEnts, funString
 
     def Create_Tex_DropMenu(names_types):
+        """
+        Creates drop down menus + a label that describes them, return 1 of the stringVar
+        :param names_types:
+        :return:
+        """
 
-        names_Types = {}
         menu_Names_Types = {}
 
-        for name, types in names_types:
+        for name, types in names_types.items():
             tk.Label(root, text=name, width=25, height=1, font=FNT, relief="groove",
-                                    compound=tk.TOP).pack(pady=1)
+                     compound=tk.TOP).pack(pady=1)
 
-            names_Types[name] = StringVar(root)
-            names_Types[name].set(types[0])  # default value
+            menu_Names_Types[name] = StringVar(root)
+            menu_Names_Types[name].set(types[0])  # default value
 
             # creating the drop down menu for class num
-            menu_Names_Types[name] = OptionMenu(root, names_Types[name], *types)
-            menu_Names_Types[name].pack(pady=1)
-            classNum_tex.pack(pady=1)
+            temp = OptionMenu(root, menu_Names_Types[name], *types)
+            temp.pack(pady=1)
 
-        return names_types, menu_Names_Types
+        return menu_Names_Types
 
+    def update_label(*args):
+        """
+        this function gets the class type, the num of the class(ie: first class second and so forth),
+        and so on and puts them in a spasific way and then it updatest the main display_label
+        :param args:
+        :return:
+        """
+        classType = menu_Names_Types["Type of class"].get()
+        classNum = menu_Names_Types["Class number"].get()
+        amount = menu_Names_Types["Amount of People"].get()
+        name = strings_Var["Name"].get()
+        phone_Num = strings_Var["Phone Number"].get()
 
-    def enter_pressed(event):
+        display_text = GooCal.GetEverythingTogether(classType, name, phone_Num, amount, classNum)
+
+        display_label.config(text=display_text)
+
+    def enter_pressed():
+        """
+        this event happes when the enter is pressed and checks if there is only phone num or also somthing else
+        :param event:
+        :return:
+        """
         name = ents["Name"].get()
         phone_Num = ents["Phone Number"].get()
         timeStart = ents["Time Start"].get()
@@ -76,14 +96,46 @@ def main():
 
         whatsappLink = OrganizePhone(phone_Num)
         date = date_cal.get()
-        classNum = classNum_Men.get()
-        peopleAmount = peopleAmount_Men.get()
-        if date != "" or timeStart != "":
-            AddMessage(whatsappLink, name, phone_Num, peopleAmount, classNum, date, timeStart, timeEnd)
-        else:
+        classNum = menu_Names_Types["Class number"].get()
+        peopleAmount = menu_Names_Types["Amount of People"].get()
+        if date == '' or timeStart == '':
             OpenWhatsapp(whatsappLink)
+        else:
+            AddMessage(whatsappLink, name, phone_Num, peopleAmount, classNum, date, timeStart, timeEnd)
+
+    def enter_Key_Pressed(event):
+        """
+        this event happes when the enter is pressed and checks if there is only phone num or also somthing else
+        :param event:
+        :return:
+        """
+        t = '"'
+        tt = ''
+        name = ents["Name"].get()
+        phone_Num = ents["Phone Number"].get()
+        timeStart = ents["Time Start"].get()
+        timeEnd = ents["Time End"].get()
+
+        ents["Name"].delete(0, END)
+        ents["Phone Number"].delete(0, END)
+        ents["Time Start"].delete(0, END)
+        ents["Time End"].delete(0, END)
+
+        whatsappLink = OrganizePhone(phone_Num)
+        date = date_cal.get()
+        classNum = menu_Names_Types["Class number"].get()
+        peopleAmount = menu_Names_Types["Amount of People"].get()
+        if date == '' or timeStart == '':
+            OpenWhatsapp(whatsappLink)
+        else:
+            AddMessage(whatsappLink, name, phone_Num, peopleAmount, classNum, date, timeStart, timeEnd)
 
     def OrganizePhone(phoneNum):
+        """
+        puts the phone num into a url in the way that is viable and returns that
+        :param phoneNum:
+        :return:
+        """
         phoneNum = re.sub("[^0-9]", "", phoneNum)
 
         if (phoneNum[0:3] != "972"):
@@ -93,23 +145,41 @@ def main():
         return whatsappLink
 
     def AddMessage(whatsappLink, name, phoneNum, personAmount, classNum, date, timeStart, TimeEnd):
+        """
+        adds the message we want to the url, and sends a whatsapp message to the phone num,
+        also sends us to a different class that adds a event to the calendar based on the entries
+        :param whatsappLink:
+        :param name:
+        :param phoneNum:
+        :param personAmount:
+        :param classNum:
+        :param date:
+        :param timeStart:
+        :param TimeEnd:
+        :return:
+        """
         text1 = "היי, נקבע לך שיעור בתאריך " + date
         text2 = ", בשעה " + timeStart
         text3 = ", במועדון הגלישה פרי גל בשדות ים. נתראה"
         text = text1 + text2 + text3
         whatsappLink += text
-        typeOfClass = classTypes_Men.get()
+        typeOfClass = menu_Names_Types["Type of class"].get()
         GooCal.CreateTypeOfClassInCalendar(typeOfClass,
-                                           GooCal.GetEverythingTogether(typeOfClass, name, phoneNum, personAmount, classNum),
+                                           GooCal.GetEverythingTogether(typeOfClass, name, phoneNum, personAmount,
+                                                                        classNum),
                                            date, timeStart, TimeEnd)
         OpenWhatsapp(whatsappLink)
 
     def OpenWhatsapp(whatsappLink):
+        """
+        opens a url with chore if it exits and if not it uses explorer
+        :param whatsappLink:
+        :return:
+        """
         if (os.path.exists(chrome_path[0:-3])):
             webbrowser.get(chrome_path).open(whatsappLink)
         else:
             webbrowser.open(whatsappLink)
-
 
     root = tk.Tk()
 
@@ -119,31 +189,21 @@ def main():
 
     root.title("Send Message WhatsApp")
 
-    root.geometry("500x700")  # Size: 300x150, Loc: 30,30
+    root.geometry("500x900")  # Size: 300x150, Loc: 30,30
 
     textsToCreate = ("Name", "Phone Number", "Time Start", "Time End")
     ents: dict[str, tk.Entry]
     texs: dict[str, tk.Label]
-    texs, ents = Create_Tex_Ent(textsToCreate)
+    ents, strings_Var = Create_Tex_Ent(textsToCreate)
 
     # Calendar chooser
     date_Tex = tk.Label(root, text="date", width=25, height=1, font=FNT, relief="groove", compound=tk.TOP)
     date_Tex.pack(pady=1)
 
-    date_cal = DateEntry(root, date_pattern="yyyy-mm-dd")
+    date_cal = DateEntry(root, firstweekday="sunday", weekenddayslist="saturday", date_pattern="yyyy-mm-dd")
     date_cal.pack()
 
-    #menu_Name = ()
-    #menu_Type = ()
-
-    #names_Types, menu_Names_Types =
-
-
-    # Creating the Drop down menu text for class type
-    classType_tex = tk.Label(root, text="Type of Class", width=25, height=1, font=FNT, relief="groove", compound=tk.TOP)
-    classType_tex.pack(pady=1)
-
-    # here is every class in the drop down
+    # creating the menu types
     types = [
         'שיעור גלישת גלים',
         'שיעור גלישת ווינג',
@@ -154,19 +214,7 @@ def main():
         'השכרת קטמרן'
     ]
 
-    # Creating the Drop down menu
-    classTypes_Men = StringVar(root)
-    classTypes_Men.set(types[0])  # default value
-
-    classMenu = OptionMenu(root, classTypes_Men, *types)
-    classMenu.pack()
-
-    # Creating the Drop down menu text for class num
-    classNum_tex = tk.Label(root, text="Number Of Class", width=25, height=1, font=FNT, relief="groove", compound=tk.TOP)
-    classNum_tex.pack(pady=1)
-
-    # here is number in the drop down
-    classNums = [
+    classNumbers = [
         'נסיון',
         'ראשון',
         'שני',
@@ -174,67 +222,43 @@ def main():
         'רביעי',
     ]
 
-    # Creating the Drop down menu for class num
-    classNum_Men = StringVar(root)
-    classNum_Men.set(classNums[0])  # default value
-
-    # creating the drop down menu for class
-    numMenu = OptionMenu(root, classNum_Men, *classNums)
-    numMenu.pack()
-
-    # remember to change names
-    # Creating the Drop down menu text for class num
-    peopleAmount_tex = tk.Label(root, text="Number Of Class", width=25, height=1, font=FNT, relief="groove",
-                            compound=tk.TOP)
-    peopleAmount_tex.pack(pady=1)
-
-    # here is number in the drop down
     peopleAmount = [
         'פרטי',
         'זוגי',
         'רב משתתפים'
     ]
 
-    # Creating the Drop down menu for class num
-    peopleAmount_Men = StringVar(root)
-    peopleAmount_Men.set(peopleAmount[0])  # default value
+    menu_Name__menu_Type = {
+        "Type of class": types,
+        "Class number": classNumbers,
+        "Amount of People": peopleAmount
+    }
 
-    # creating the drop down menu for class num
-    peopleAmountMenu = OptionMenu(root, peopleAmount_Men, *peopleAmount)
-    peopleAmountMenu.pack()
-
-
+    menu_Names_Types = Create_Tex_DropMenu(menu_Name__menu_Type)
 
     # Creating Button
     fntForButton = font.Font(family="Helvetica", size=10, weight=font.BOLD, slant=font.ITALIC)
     Enter_button = tk.Button(root, text="Enter", font=fntForButton, command=enter_pressed)
-    root.bind("<Return>", enter_pressed)
     Enter_button.pack(pady=5)
-    whatCalendarShow_tex: tk.Label
+    root.bind("<Return>", enter_Key_Pressed)
 
+    # Getting the information on how the calendar event will look like #
+    # setting traces so that the label will change if one of the entries or menus will change
+    menu_Names_Types["Type of class"].trace_add("write", update_label)
+    menu_Names_Types["Class number"].trace_add("write", update_label)
+    menu_Names_Types["Amount of People"].trace_add("write", update_label)
+    strings_Var["Name"].trace_add("write", update_label)
+    strings_Var["Phone Number"].trace_add("write", update_label)
 
-    name = ents["Name"].get()
-    phone_Num = ents["Phone Number"].get()
-    whatCalendarShow_text = GooCal.GetEverythingTogether(classTypes_Men.get(), name,
-                                                         phone_Num, peopleAmount_Men.get(), classNum_Men.get())
+    # creating the label that will show what the calendar will write
+    display_label = tk.Label(root, font=FNT, text="כאן זה יראה איך זה יראה בגוגל כאלאנדר", wraplength=300)
+    display_label.pack(pady=10)
 
-    #whatCalendarShow_tex = CalendarShow(whatCalendarShow_tex, whatCalendarShow_text)
-
-    #whatCalendarShow_tex = CalendarShow()
-
-    """
-    whatCalendarShow_text_length_X = len(whatCalendarShow_text)
-    whatCalendarShow_text_length_Y = 0
-    tempNum = whatCalendarShow_text_length_X
-    while(tempNum > 20):
-        whatCalendarShow_text_length_Y += 1
-        tempNum -= 20
-    """
-    # Putting WhatsApp Image
-    # dir_path = os.path.dirname(os.path.realpath(__file__))
-    # Image_WhatsApp_Link = ImageTk.PhotoImage(Image.open(dir_path + r'\Freegull_Logo.jpeg'))
-    # Image_WhatsApp = tk.Label(root, image=Image_WhatsApp_Link)
-    # Image_WhatsApp.pack(side="bottom", pady=5)
+    # Putting Freegull Image
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    Image_WhatsApp_Link = ImageTk.PhotoImage(Image.open(dir_path + r'\Freegull_Logo.jpeg'))
+    Image_WhatsApp = tk.Label(root, image=Image_WhatsApp_Link)
+    Image_WhatsApp.pack(side="bottom", pady=5)
 
     root.mainloop()
 

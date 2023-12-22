@@ -255,8 +255,8 @@ def main():
     display_label.pack(pady=10)
 
     # Putting Freegull Image
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    Image_WhatsApp_Link = ImageTk.PhotoImage(Image.open(os.path.join(dir_path, 'Freegull_Logo.jpeg')))
+    root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    Image_WhatsApp_Link = ImageTk.PhotoImage(Image.open(os.path.join(root_path, 'misc','Freegull_Logo.jpeg')))
     Image_WhatsApp = tk.Label(root, image=Image_WhatsApp_Link)
     Image_WhatsApp.pack(side="bottom", pady=5)
 

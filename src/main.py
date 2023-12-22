@@ -6,7 +6,7 @@ from tkcalendar import DateEntry
 from PIL import ImageTk, Image
 import os
 import re
-import Calander_Make_event as GooCal
+import calander_logic as GooCal
 
 # General Constants
 chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'  # path to chrome browser
